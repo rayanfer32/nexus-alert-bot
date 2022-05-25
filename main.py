@@ -12,7 +12,7 @@ from pyrogram import Client, filters
 
 import logging
 logging.basicConfig(filename="debug.log", format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s',
-                    level=logging.INFO)
+                    level=logging.WARNING)
 
 bot = Client(
     config.BOT_NAME,
