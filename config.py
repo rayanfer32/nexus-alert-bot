@@ -1,11 +1,11 @@
 import os
 
-# * DEV
+# # * DEV
 # DEBUG_MODE = True # debug mode bot will send messages to developer only
 # ALERT_AMOUNT = 1 # in NXS
-# POLLING_INTERVAL = 10 # in seconds
+# POLLING_INTERVAL = 20 # in seconds
 
-# # * PROD
+# * PROD
 DEBUG_MODE = False # debug mode bot will send messages to developer only
 ALERT_AMOUNT = 1000 # in NXS
 POLLING_INTERVAL = 20 # in seconds
