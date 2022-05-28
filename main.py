@@ -7,7 +7,7 @@ import json
 import time
 import dotenv
 
-from utils import get_latest_block
+from utils import get_block, get_latest_block
 dotenv.load_dotenv()
 
 
@@ -37,41 +37,38 @@ def handle_command(client, message):
 @bot.on_message(filters.command("lastblock"))
 def handle_command(client, message):
     logging.info(message)
-    message.reply(LAST_BLOCK)
+    message.reply(main_context["last_block"])
 
 
-def whale_notifier():
-    global LAST_BLOCK
+def whale_notifier(main_context):
+    # global LAST_BLOCK
 
-    def scan_new_block(block):
+    def scan_and_send_alert(block):
         def extract_info(contract):
             try:
                 # ! only handles trituim txns, legacy amount is not included
-                amt = contract.get("amount")
+                amount = contract.get("amount")
                 token = contract.get("token")
                 tx_from = contract.get("from")
-                if tx_from is None:
-                    tx_from = contract.get("proof")
                 tx_to = contract.get("to")
-                if str(token) in ["0","0000000000000000000000000000000000000000000000000000000000000000"]:
+                proof = contract.get("proof")
+                op = contract.get("OP")
+                if str(token) in ["0", "0000000000000000000000000000000000000000000000000000000000000000"]:
                     token = "NXS"
-                return {"amount": amt, "from": tx_from, "to": tx_to, "token": token}
+                return {"amount": amount, "op": op, "from": tx_from, "proof": proof, "to": tx_to, "token": token}
             except Exception as e:
                 print(e)
                 logging.info(e)
 
         for tx in block.get("tx"):
             for contract in tx.get("contracts"):
-                _block_info = extract_info(contract)
-                amount = _block_info.get("amount")
+                contract_info = extract_info(contract)
+                amount = contract_info.get("amount")
                 if amount is not None:
                     if amount > config.ALERT_AMOUNT:
                         block_height = block.get("height")
-                        token = _block_info.get("token")
-                        tx_from = _block_info.get("from")
-                        tx_to = _block_info.get("to")
                         message = strings.whale_notification(
-                            block_height, amount, tx_from, tx_to, token)
+                            block_height, contract_info)
                         bot.send_message(
                             config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, message)
                 else:
@@ -83,12 +80,23 @@ def whale_notifier():
         try:
             # * fetch topmost block
             block_json = get_latest_block()
-            if block_json["height"] != LAST_BLOCK:
-                scan_new_block(block_json)
+
+            # * find if any blocks is lost and send alert
+            try:
+                if(int(block_json["height"]) - int(main_context["last_block"]) > 1):
+                    logging.warning("lost a block in whale notifier")
+                    scan_and_send_alert(
+                        get_block(int(main_context["last_block"]) + 1))
+            except:
+                logging.warning("first block in whale notifier")
+                pass
+
+            if block_json["height"] != main_context["last_block"]:
+                scan_and_send_alert(block_json)
             else:
                 print("no new block")
                 logging.info("no new block")
-            LAST_BLOCK = block_json["height"]
+            main_context["last_block"] = block_json["height"]
         except Exception as e:
             print(e)
             logging.error(e)
@@ -98,7 +106,7 @@ def whale_notifier():
 
 if __name__ == "__main__":
     logging.info("Starting bot...")
-    LAST_BLOCK = 0
+    main_context = {"last_block": 0}
     whale_notifier_thread = threading.Thread(
-        target=lambda: whale_notifier(), daemon=True).start()
+        target=lambda: whale_notifier(main_context), daemon=True).start()
     bot.run()
