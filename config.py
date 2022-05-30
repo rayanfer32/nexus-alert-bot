@@ -17,7 +17,7 @@ else:
   print("Development mode")
 
 
-HIDE_DEBIT_TXNS = True # hide debit transactions
+HIDE_DEBIT_TXNS = False # hide debit transactions
 NXS_BASE_URL = "http://api.nexus-interactions.io:8080"
 DEVELOPER_CHAT_ID = 628650705
 ALERT_CHANNEL_ID= -1001581163183 # t.me/nexusalerts

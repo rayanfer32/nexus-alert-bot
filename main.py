@@ -77,8 +77,13 @@ def whale_notifier(main_context):
                 tx_to = contract.get("to")
                 proof = contract.get("proof")
                 op = contract.get("OP")
+                
+                if(op == "DEBIT" and config.HIDE_DEBIT_TXNS):
+                    return None
+    
                 if str(token) in ["0", "0000000000000000000000000000000000000000000000000000000000000000"]:
                     token = "NXS"
+
                 return {"amount": amount, "op": op, "from": tx_from, "proof": proof, "to": tx_to, "token": token}
             except Exception as e:
                 print(e)
