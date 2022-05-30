@@ -5,7 +5,8 @@ start = "Welcome to nexus alerts bot!"
 help = "Use /start to get started"
 
 emojis = {'fish1': "🐠", "fish2": "🐟", "fish3": "🐡",
-          "shark": "🦈", "whale": "🐋", "blue_whale": "🐳"}
+          "shark": "🦈", "dolphin": "🐬", "whale": "🐋", "blue_whale": "🐳"}
+
 
 def get_emoji(amount) -> str:
     "get emoji based on amount"
@@ -14,13 +15,14 @@ def get_emoji(amount) -> str:
     elif amount >= 100000:
         return emojis.get("whale") * 3
     elif amount >= 50000:
-        return emojis.get("shark") * 3
+        return emojis.get("dolphin") * 3
     elif amount >= 10000:
-        return emojis.get("fish3") * 3
+        return emojis.get("shark") * 3
     elif amount >= 5000:
-        return emojis.get("fish2") * 3
+        return emojis.get("fish3") * 3
     else:
         return emojis.get("fish1") * 2
+
 
 def whale_notification(block_height, contract):
     amount = contract.get("amount")
