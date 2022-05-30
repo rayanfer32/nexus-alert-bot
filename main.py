@@ -1,11 +1,12 @@
-import threading
-import logging
-from pyrogram import Client, filters
-import strings
-import config
 import json
 import time
 import dotenv
+import strings
+import config
+import random
+import logging
+import threading
+from pyrogram import Client, filters
 
 from utils import get_block, get_latest_block
 dotenv.load_dotenv()
@@ -40,8 +41,31 @@ def handle_command(client, message):
     message.reply(main_context["last_block"])
 
 
+@bot.on_message(filters.command("debug"))
+def handle_command(client, message):
+    logging.info(message)
+    message.reply("debug")
+    amt = random.randint(0, 1000000)
+    msg = strings.whale_notification(main_context.get("last_block"), {
+                                     "amount": amt, "op": "CREDIT", "from": "sda", "proof": "das", "to": "sd9a", "token": "NXS"})
+    message.reply(msg)
+
+
 def whale_notifier(main_context):
     # global LAST_BLOCK
+
+    def get_lost_block() -> int:
+        "return None if no lost block or block number if block of the lost block"
+        try:
+            new_block = int(block_json.get("height"))
+            old_block = int(main_context.get("last_block"))
+            if(new_block - old_block > 1):
+                return old_block + 1
+            else:
+                return None
+        except Exception as e:
+            print("get_lost_block ERROR: ", e)
+        return None
 
     def scan_and_send_alert(block):
         def extract_info(contract):
@@ -74,24 +98,19 @@ def whale_notifier(main_context):
                     else:
                         logging.error(
                             f"block parsing failed for {block.get('height')}")
-        except: 
+        except:
             logging.error(f"block parsing failed for {block.get('height')}")
-    
+
     logging.info("Starting whale notifier thread.")
     while True:
         try:
             # * fetch topmost block
             block_json = get_latest_block()
-
             # * find if any blocks is lost and send alert
-            try:
-                if(int(block_json["height"]) - int(main_context["last_block"]) > 1):
-                    logging.warning("lost a block in whale notifier")
-                    scan_and_send_alert(
-                        get_block(int(main_context["last_block"]) + 1))
-            except:
-                logging.warning("first block in whale notifier")
-                pass
+            lost_block = get_lost_block()
+            if lost_block is not None:
+                logging.warning("lost a block in whale notifier")
+                scan_and_send_alert(get_block(lost_block))
 
             if block_json["height"] != main_context["last_block"]:
                 scan_and_send_alert(block_json)
