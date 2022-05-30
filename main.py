@@ -59,22 +59,24 @@ def whale_notifier(main_context):
             except Exception as e:
                 print(e)
                 logging.info(e)
-
-        for tx in block.get("tx"):
-            for contract in tx.get("contracts"):
-                contract_info = extract_info(contract)
-                amount = contract_info.get("amount")
-                if amount is not None:
-                    if amount > config.ALERT_AMOUNT:
-                        block_height = block.get("height")
-                        message = strings.whale_notification(
-                            block_height, contract_info)
-                        bot.send_message(
-                            config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, message)
-                else:
-                    logging.error(
-                        f"block parsing failed for {block.get('height')}")
-
+        try:
+            for tx in block.get("tx"):
+                for contract in tx.get("contracts"):
+                    contract_info = extract_info(contract)
+                    amount = contract_info.get("amount")
+                    if amount is not None:
+                        if amount > config.ALERT_AMOUNT:
+                            block_height = block.get("height")
+                            message = strings.whale_notification(
+                                block_height, contract_info)
+                            bot.send_message(
+                                config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, message)
+                    else:
+                        logging.error(
+                            f"block parsing failed for {block.get('height')}")
+        except: 
+            logging.error(f"block parsing failed for {block.get('height')}")
+    
     logging.info("Starting whale notifier thread.")
     while True:
         try:
@@ -100,6 +102,7 @@ def whale_notifier(main_context):
         except Exception as e:
             print(e)
             logging.error(e)
+            main_context["last_block"] = block_json["height"]
         time.sleep(config.POLLING_INTERVAL)  # * wait before next block scan
     logging.error("Thread exited")
 
