@@ -45,10 +45,12 @@ def process_block(block: json) -> list:
                     contract_info = extract_contract_info(contract)
                     amount = contract_info.get("amount")
                     if amount is not None:
-                        block_height = block.get("height")
-                        message = strings.whale_notification(
-                            block_height, contract_info)
-                        messages.append(message)
+                        # todo : this constraint must be removed from here in future
+                        if amount >= config.ALERT_AMOUNT:
+                            block_height = block.get("height")
+                            message = strings.whale_notification(
+                                block_height, contract_info)
+                            messages.append(message)
                     else:
                         errors.append(
                             f"contract parsing failed for a contact: {contract} in block: {block.get('height')}")
