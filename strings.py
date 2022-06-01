@@ -1,6 +1,3 @@
-from lib2to3.pgen2 import token
-
-
 start = "Welcome to nexus alerts bot!"
 help = "Use /start to get started"
 
@@ -26,7 +23,7 @@ def get_emoji(amount) -> str:
 
 def whale_notification(block_height, contract):
     amount = contract.get("amount")
-    return f""" { get_emoji(amount)}  
+    return f"""{get_emoji(amount)}  
 📥 New Transcation on Block : `{block_height}`
 💰 Amount: `{amount}`
 💎 Token: `{contract.get("token")}`
