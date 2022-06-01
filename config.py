@@ -10,14 +10,14 @@ POLLING_INTERVAL = 20 # in seconds
 # * PROD
 if os.environ.get("ENV") == "PROD":
   print("Production mode")
-  DEBUG_MODE = False # debug mode bot will send messages to alerts channel
-  ALERT_AMOUNT = 1000 # in NXS
-  POLLING_INTERVAL = 20 # in seconds
+  DEBUG_MODE = False 
+  ALERT_AMOUNT = 1000 
+  POLLING_INTERVAL = 20 
 else:
   print("Development mode")
 
 
-HIDE_DEBIT_TXNS = False # hide debit transactions
+HIDE_DEBIT_TXNS = True # hide debit transactions
 NXS_BASE_URL = "http://api.nexus-interactions.io:8080"
 DEVELOPER_CHAT_ID = 628650705
 ALERT_CHANNEL_ID= -1001581163183 # t.me/nexusalerts

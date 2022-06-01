@@ -77,17 +77,17 @@ def whale_notifier(main_context):
                 tx_to = contract.get("to")
                 proof = contract.get("proof")
                 op = contract.get("OP")
-                
+
                 if(op == "DEBIT" and config.HIDE_DEBIT_TXNS):
                     return None
-    
+
                 if str(token) in ["0", "0000000000000000000000000000000000000000000000000000000000000000"]:
                     token = "NXS"
 
                 return {"amount": amount, "op": op, "from": tx_from, "proof": proof, "to": tx_to, "token": token}
             except Exception as e:
                 print(e)
-                logging.info(e)
+                logging.error("Extract info error: ", e)
         try:
             for tx in block.get("tx"):
                 contracts = tx.get("contracts")
@@ -104,7 +104,7 @@ def whale_notifier(main_context):
                                     config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, message)
                         else:
                             logging.error(
-                                f"block parsing failed for {block.get('height')}")
+                                f"contract parsing failed for a contact: {contract} in block: {block.get('height')}")
         except:
             logging.error(f"block parsing failed for {block.get('height')}")
 
@@ -113,22 +113,24 @@ def whale_notifier(main_context):
         try:
             # * fetch topmost block
             block_json = get_latest_block()
+
             # * find if any blocks is lost and send alert
             lost_block = get_lost_block()
             if lost_block is not None:
-                logging.warning("lost a block in whale notifier")
+                logging.warning(
+                    f"scanning lost block {lost_block} in whale notifier")
                 scan_and_send_alert(get_block(lost_block))
 
-            if block_json["height"] != main_context["last_block"]:
+            if block_json.get("height") != main_context.get("last_block"):
                 scan_and_send_alert(block_json)
             else:
                 print("no new block")
                 logging.info("no new block")
-            main_context["last_block"] = block_json["height"]
+            main_context.update({"last_block": block_json.get("height")})
         except Exception as e:
             print(e)
             logging.error(e)
-            main_context["last_block"] = block_json["height"]
+            main_context.update({"last_block": block_json.get("height")})
         time.sleep(config.POLLING_INTERVAL)  # * wait before next block scan
     logging.error("Thread exited")
 
