@@ -45,7 +45,7 @@ def handle_command(client, message):
     blocknum: int = message.command[1]
     print(f"/b {blocknum}")
     block_json = get_block(blocknum)
-    responses = process_block(block_json)
+    responses = process_block(block_json, alert_amount=0)
     for m in responses:
         message.reply(m)
 

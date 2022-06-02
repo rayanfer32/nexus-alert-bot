@@ -34,7 +34,7 @@ def extract_contract_info(contract) -> dict:
         print(e)
         logging.error("Extract contract info error: ", e)
 
-def process_block(block: json) -> list:
+def process_block(block: json, alert_amount: int = config.ALERT_AMOUNT) -> list:
     messages = []
     errors = []
     try:
@@ -46,7 +46,7 @@ def process_block(block: json) -> list:
                     amount = contract_info.get("amount")
                     if amount is not None:
                         # todo : this constraint must be removed from here in future
-                        if amount >= config.ALERT_AMOUNT:
+                        if amount >= alert_amount:
                             block_height = block.get("height")
                             message = strings.whale_notification(
                                 block_height, contract_info)
