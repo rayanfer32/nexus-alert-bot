@@ -1,0 +1,40 @@
+{
+  "registers": {
+    "total": 182089,
+    "account": 90504,
+    "append": 0,
+    "crypto": 30095,
+    "name": 60081,
+    "name_global": 37,
+    "name_namespaced": 29,
+    "namespace": 14,
+    "object": 120,
+    "object_tokenized": 50,
+    "raw": 0,
+    "readonly": 644,
+    "token": 130
+  },
+  "sig_chains": 30095,
+  "trust": {
+    "total": 501,
+    "stake": 28085621.0,
+    "trust": 8224604021
+  },
+  "supply": {
+    "total": 73547724.366887,
+    "target": 70912327.087556,
+    "inflationrate": 3.716416295402425,
+    "minute": 3.784356,
+    "hour": 227.059114,
+    "day": 5448.139966,
+    "week": 38081.092414,
+    "month": 151550.24217
+  },
+  "reserves": {
+    "ambassador": 252.051498,
+    "developer": 149.891061,
+    "fee": 105762.897,
+    "hash": 95.687584,
+    "prime": 80.215683
+  }
+}

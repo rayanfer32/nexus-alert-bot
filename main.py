@@ -6,8 +6,11 @@ import config
 import logging
 import threading
 from pyrogram import Client, filters
+from datetime import datetime
+import schedule
+import time
 
-from utils import get_block, get_latest_block, process_block
+from utils import get_block, get_latest_block, get_metrics, load_metrics, pp, process_block, save_metrics
 dotenv.load_dotenv()
 
 
@@ -96,10 +99,56 @@ def whale_notifier(main_context):
         time.sleep(config.POLLING_INTERVAL)  # * wait before next block scan
     logging.error("Thread exited")
 
+def metrics_notifier():
+    def job():
+        prev_metrics:dict = load_metrics()
+        new_metrics:dict = get_metrics()
+        metrics_trees = ["registers", "trust", "supply", "reserves"]
+
+        def get_change_diff(old:dict, new:dict):
+            change_diff = {}
+            for k,v in old.items():
+                change_diff[k] = new[k] - v
+            return change_diff
+
+        select_key = metrics_trees[0]
+        old_data = prev_metrics.get(select_key)
+        new_data = new_metrics.get(select_key)
+        change_diff = get_change_diff(old_data, new_data)
+
+        msg = f"#{select_key.title()} - 24 Hour Change Report\n" 
+
+        def custom_change_text(cdiff, k):
+            val = cdiff[k]
+            val = round(val,2)
+            if val == 0:
+                return "No Change"
+            elif val > 0:
+                return f"+{val}▲"
+            else:
+                return f"{val}▼"
+
+        for k,v in new_metrics.get(select_key).items():
+            msg += f"ℹ️ {k.title()}: {round(v,2)} -> {custom_change_text(change_diff,k)}\n"
+
+        bot.send_message(config.DEVELOPER_CHAT_ID, msg)
+
+        save_metrics()
+        # pp(metrics_json)
+
+    schedule.every(0.1).minutes.do(job)
+    # ? schedule.every().day.at("10:30").do(job)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
 
 if __name__ == "__main__":
     logging.info("Starting bot...")
     main_context = {"last_block": 0}
     whale_notifier_thread = threading.Thread(
         target=lambda: whale_notifier(main_context), daemon=True).start()
+    metrics_notifier_thread = threading.Thread(
+        target=lambda: metrics_notifier(), daemon=True).start()
     bot.run()

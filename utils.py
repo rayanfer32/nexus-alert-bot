@@ -10,8 +10,29 @@ def get_latest_block():
 def get_block(height):
     return requests.get(f"{config.NXS_BASE_URL}/ledger/get/block?verbose=detail&height={height}").json()["result"]
 
+def get_metrics():
+    return requests.get(f"{config.NXS_BASE_URL}/system/get/metrics").json()["result"]
+
+def get_mining():
+    """Get the mining info"""
+    return requests.get(f"{config.NXS_BASE_URL}/ledger/get/info").json()["result"]
+
 def pp(_json):
-    json.dumps(_json, indent=1)
+    print(json.dumps(_json, indent=1))
+
+
+def load_metrics(filename: str = "metrics.json") -> dict:
+    try:
+        with open(filename, "r") as f:
+            return json.load(f)
+    except Exception as e:
+        print(e)
+        return {}
+
+
+def save_metrics(metrics: dict):
+    with open("metrics.json", "w") as f:
+        json.dump(metrics, f)
 
 def extract_contract_info(contract) -> dict:
     try:
