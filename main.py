@@ -100,5 +100,5 @@ if __name__ == "__main__":
     logging.info("Starting bot...")
     main_context = {"last_block": 0}
     whale_notifier_thread = threading.Thread(target=lambda: whale_notifier(main_context), daemon=True)
-    whale_notifer_thread.start()
+    whale_notifier_thread.start()
     bot.run()
