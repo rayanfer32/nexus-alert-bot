@@ -65,8 +65,8 @@ def whale_notifier(main_context):
         return None
 
     def scan_and_send_alert(block: json):
-        responses = process_block(block)
-        for msg in responses:
+        messages = process_block(block)
+        for msg in messages:
             bot.send_message(
                 config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, msg)
 
@@ -79,8 +79,7 @@ def whale_notifier(main_context):
             # * find if any blocks is lost and send alert
             lost_block = get_lost_block()
             if lost_block is not None:
-                logging.warning(
-                    f"scanning lost block {lost_block} in whale notifier")
+                logging.warning(f"scanning lost block {lost_block} in whale notifier")
                 scan_and_send_alert(get_block(lost_block))
 
             if block_json.get("height") != main_context.get("last_block"):
@@ -88,11 +87,11 @@ def whale_notifier(main_context):
             else:
                 print("no new block")
                 logging.info("no new block")
-            main_context.update({"last_block": block_json.get("height")})
         except Exception as e:
             print(e)
             logging.error(e)
-            main_context.update({"last_block": block_json.get("height")})
+        
+        main_context.update({"last_block": block_json.get("height")})
         time.sleep(config.POLLING_INTERVAL)  # * wait before next block scan
     logging.error("Thread exited")
 
@@ -100,6 +99,6 @@ def whale_notifier(main_context):
 if __name__ == "__main__":
     logging.info("Starting bot...")
     main_context = {"last_block": 0}
-    whale_notifier_thread = threading.Thread(
-        target=lambda: whale_notifier(main_context), daemon=True).start()
+    whale_notifier_thread = threading.Thread(target=lambda: whale_notifier(main_context), daemon=True)
+    whale_notifer_thread.start()
     bot.run()
