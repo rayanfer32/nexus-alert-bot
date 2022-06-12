@@ -71,34 +71,39 @@ def whale_notifier(main_context):
                 config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, msg)
 
     logging.info("Starting whale notifier thread.")
-    while True:
-        try:
-            # * fetch topmost block
-            block_json = get_latest_block()
+    try:
+        while True:
+            try:
+                # * fetch topmost block
+                block_json = get_latest_block()
 
-            # * find if any blocks is lost and send alert
-            lost_block = get_lost_block()
-            if lost_block is not None:
-                logging.warning(f"scanning lost block {lost_block} in whale notifier")
-                scan_and_send_alert(get_block(lost_block))
+                # * find if any blocks is lost and send alert
+                lost_block = get_lost_block()
+                if lost_block is not None:
+                    logging.warning(
+                        f"scanning lost block {lost_block} in whale notifier")
+                    scan_and_send_alert(get_block(lost_block))
 
-            if block_json.get("height") != main_context.get("last_block"):
-                scan_and_send_alert(block_json)
-            else:
-                print("no new block")
-                logging.info("no new block")
-        except Exception as e:
-            print(e)
-            logging.error(e)
-        
-        main_context.update({"last_block": block_json.get("height")})
-        time.sleep(config.POLLING_INTERVAL)  # * wait before next block scan
-    logging.error("Thread exited")
+                if block_json.get("height") != main_context.get("last_block"):
+                    scan_and_send_alert(block_json)
+                else:
+                    print("no new block")
+                    logging.info("no new block")
+            except Exception as e:
+                print(e)
+                logging.error(e)
+
+            main_context.update({"last_block": block_json.get("height")})
+            # * wait before next block scan
+            time.sleep(config.POLLING_INTERVAL)
+    except Exception as e:
+        logging.error("whale_notifier_thread exited due to error: ", e)
 
 
 if __name__ == "__main__":
     logging.info("Starting bot...")
     main_context = {"last_block": 0}
-    whale_notifier_thread = threading.Thread(target=lambda: whale_notifier(main_context), daemon=True)
+    whale_notifier_thread = threading.Thread(
+        target=lambda: whale_notifier(main_context), daemon=True)
     whale_notifier_thread.start()
     bot.run()
