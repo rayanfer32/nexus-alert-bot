@@ -45,9 +45,11 @@ def handle_command(client, message):
     blocknum: int = message.command[1]
     print(f"/b {blocknum}")
     block_json = get_block(blocknum)
-    responses = process_block(block_json, alert_amount=0)
+    responses, errors = process_block(block_json, alert_amount=0)
     for m in responses:
         message.reply(m)
+    for err in errors:
+        message.reply(err)
 
 
 def whale_notifier(main_context):
@@ -64,11 +66,20 @@ def whale_notifier(main_context):
             print("get_lost_block ERROR: ", e)
         return None
 
+    def get_lost_blocks(old_height: int, new_height: int) -> list[int]:
+        "return list of lost blocks"
+        if old_height == 0:
+            return []
+        if (old_height > new_height):
+            return []
+        return [old_height + i+1 for i in range(new_height - old_height - 1)]
+
     def scan_and_send_alert(block: json):
-        messages = process_block(block)
+        messages ,errors = process_block(block)
         for msg in messages:
-            bot.send_message(
-                config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, msg)
+            bot.send_message(config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, msg)
+        for err in errors:
+            bot.send_message(config.DEVELOPER_CHAT_ID, err)
 
     logging.info("Starting whale notifier thread.")
     try:
@@ -78,9 +89,11 @@ def whale_notifier(main_context):
                 block_json = get_latest_block()
 
                 # * find if any blocks is lost and send alert
-                lost_block = get_lost_block()
-                if lost_block is not None:
-                    logging.warning(
+                new_block = int(block_json.get("height"))
+                old_block = int(main_context.get("last_block"))
+                lost_blocks = get_lost_blocks(old_height=old_block, new_height=new_block)
+                for lost_block in lost_blocks:
+                    logging.info(
                         f"scanning lost block {lost_block} in whale notifier")
                     scan_and_send_alert(get_block(lost_block))
 
