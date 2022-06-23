@@ -23,8 +23,6 @@ def extract_contract_info(contract) -> dict:
         proof = contract.get("proof")
         op = contract.get("OP")
         credit_for = contract.get("for")
-        if(op == "DEBIT" and config.HIDE_DEBIT_TXNS):
-            return None
 
         if str(token) in ["0", "0000000000000000000000000000000000000000000000000000000000000000"]:
             token = "NXS"
@@ -43,6 +41,11 @@ def process_block(block: json, alert_amount: int = config.ALERT_AMOUNT) -> list[
             if contracts is not None:
                 for contract in contracts:
                     contract_info = extract_contract_info(contract)
+                    
+                    # * Don't send DEBIT txn alerts.
+                    if(contract_info.get("op") == "DEBIT" and config.HIDE_DEBIT_TXNS):
+                        continue
+                    
                     amount = contract_info.get("amount")
                     if amount is not None:
                         if amount >= alert_amount:
@@ -51,10 +54,10 @@ def process_block(block: json, alert_amount: int = config.ALERT_AMOUNT) -> list[
                                 block_height, contract_info)
                             messages.append(message)
                     else:
-                        errors.append(
-                            f"contract parsing failed for a contact: {contract} in block: {block.get('height')}")
-    except:
-        errors.append(f"block parsing failed for {block.get('height')}")
+                        desc = f"`{json.dumps(contract, indent=2)}`\n in block: {block.get('height')}"
+                        errors.append(strings.error_notification("Special Contract", desc))
+    except Exception as e:
+        errors.append(f"block parsing failed for {block.get('height')} due to {e}")
     
     # * log errors
     for error in errors:

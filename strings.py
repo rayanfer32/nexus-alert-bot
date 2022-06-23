@@ -1,5 +1,6 @@
 from typing import List
 
+
 def remove_none_lines(msg):
     # * remove lines with None values
     _msg = ""
@@ -7,6 +8,7 @@ def remove_none_lines(msg):
         if not line.find("None") > -1:
             _msg += line + "\n"
     return _msg
+
 
 start = "Welcome to nexus alerts bot!"
 help = "Use /start to get started"
@@ -37,6 +39,7 @@ fish_map = {
     "sardine": "Sardine",
     "shrimp": "Shrimp"
 }
+
 
 def get_fishname_and_emoji(amount) -> List[str]:
     "get emoji based on amount"
@@ -75,6 +78,8 @@ def whale_notification(block_height, contract):
 ↘️ From: `{contract.get("from")}`
 ↗️ To: `{contract.get("to")}`
 💠 https://explorer.nexus.io/scan/{block_height}"""
-
     return remove_none_lines(reply_msg)
 
+
+def error_notification(title, desc):
+    return f"ℹ️ {title} ℹ️\n {desc}"
