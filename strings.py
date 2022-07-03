@@ -34,6 +34,7 @@ fish_map = {
     "humpack_whale": "Humpback Whale",
     "whale_shark": "Whale Shark",
     "tiger_shark": "Tiger Shark",
+    "blue_white_shark": "Blue White Shark",
     "dolphin": "Dolphin",
     "tuna": "Tuna",
     "sardine": "Sardine",
@@ -46,15 +47,15 @@ def get_fishname_and_emoji(amount) -> List[str]:
     if amount >= 500000:
         return emojis.get("blue_whale") * 6, fish_map.get("blue_whale")
     elif amount >= 250000:
-        return emojis.get("blue_whale") * 3, fish_map.get("sperm_whale")
+        return emojis.get("blue_whale") * 6, fish_map.get("sperm_whale")
     elif amount >= 100000:
-        return emojis.get("whale") * 4, fish_map.get("humpack_whale")
+        return emojis.get("whale") * 3, fish_map.get("humpack_whale")
     elif amount >= 80000:
-        return emojis.get("shark") * 4, fish_map.get("whale_shark")
+        return emojis.get("shark") * 6, fish_map.get("whale_shark")
     elif amount >= 60000:
-        return emojis.get("shark") * 3, fish_map.get("tiger_shark")
+        return emojis.get("shark") * 4, fish_map.get("tiger_shark")
     elif amount >= 30000:
-        return emojis.get("dolphin") * 3, fish_map.get("dolphin")
+        return emojis.get("shark") * 2, fish_map.get("blue_white_shark")
     elif amount >= 10000:
         return emojis.get("dolphin") * 2, fish_map.get("dolphin")
     elif amount >= 5000:
