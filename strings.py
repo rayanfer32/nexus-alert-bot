@@ -12,6 +12,7 @@ def remove_none_lines(msg):
 
 start = "Welcome to nexus alerts bot!"
 help = "Use /start to get started"
+dead = "Whale notifier process appears dead, please restart the bot."
 
 emojis = {
     "blue_whale": "🐳",
@@ -85,3 +86,4 @@ def whale_notification(block_height, contract):
 
 def error_notification(title, desc):
     return f"ℹ️ {title} ℹ️\n {desc}"
+

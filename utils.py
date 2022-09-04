@@ -4,14 +4,18 @@ import strings
 import logging
 import requests
 
+
 def get_latest_block():
     return requests.get(f"{config.NXS_BASE_URL}/ledger/list/blocks", params={"limit": 1, "verbose": "detail"}).json()["result"][0]
+
 
 def get_block(height):
     return requests.get(f"{config.NXS_BASE_URL}/ledger/get/block?verbose=detail&height={height}").json()["result"]
 
+
 def pp(_json):
     json.dumps(_json, indent=1)
+
 
 def extract_contract_info(contract) -> dict:
     try:
@@ -32,7 +36,8 @@ def extract_contract_info(contract) -> dict:
         print(e)
         logging.error("Extract contract info error: ", e)
 
-def process_block(block: json, alert_amount: int = config.ALERT_AMOUNT) -> list[list,list]:
+
+def process_block(block: json, alert_amount: int = config.ALERT_AMOUNT) -> list[list, list]:
     messages = []
     errors = []
     try:
@@ -41,11 +46,11 @@ def process_block(block: json, alert_amount: int = config.ALERT_AMOUNT) -> list[
             if contracts is not None:
                 for contract in contracts:
                     contract_info = extract_contract_info(contract)
-                    
+
                     # * Don't send DEBIT txn alerts.
                     if(contract_info.get("op") == "DEBIT" and config.HIDE_DEBIT_TXNS):
                         continue
-                    
+
                     amount = contract_info.get("amount")
                     if amount is not None:
                         if amount >= alert_amount:
@@ -55,12 +60,23 @@ def process_block(block: json, alert_amount: int = config.ALERT_AMOUNT) -> list[
                             messages.append(message)
                     else:
                         desc = f"`{json.dumps(contract, indent=2)}`\n in block: {block.get('height')}"
-                        errors.append(strings.error_notification("Special Contract", desc))
+                        errors.append(strings.error_notification(
+                            "Special Contract", desc))
     except Exception as e:
-        errors.append(f"block parsing failed for {block.get('height')} due to {e}")
-    
+        errors.append(
+            f"block parsing failed for {block.get('height')} due to {e}")
+
     # * log errors
     for error in errors:
         logging.error(error)
-    
+
     return messages, errors
+
+
+def calc_lost_blocks(old_height: int, new_height: int) -> list[int]:
+    "return list of lost blocks"
+    if old_height == 0:
+        return []
+    if (old_height > new_height):
+        return []
+    return [old_height + i+1 for i in range(new_height - old_height - 1)]

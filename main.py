@@ -7,7 +7,7 @@ import logging
 import threading
 from pyrogram import Client, filters
 
-from utils import get_block, get_latest_block, process_block
+from utils import calc_lost_blocks, get_block, get_latest_block, process_block
 dotenv.load_dotenv()
 
 
@@ -52,32 +52,29 @@ def handle_command(client, message):
         message.reply(err)
 
 
+def whale_notifier_monitor(main_context):
+    try:
+        while True:
+            try:
+                block_json = get_latest_block()
+                new_block: int = int(block_json.get("height"))
+                old_block: int = int(main_context.get("last_block"))
+                if((new_block - old_block) > 3):
+                    bot.send_message(config.DEVELOPER_CHAT_ID, strings.dead)
+                time.sleep(config.POLLING_INTERVAL)
+            except Exception as e:
+                logging.error(f"whale notifier monitor, {e}")
+                time.sleep(5)
+    except Exception as e:
+        logging.error(f"whale notifier monitor loop exited, {e}")
+
+
 def whale_notifier(main_context):
-    def get_lost_block() -> int:
-        "return None if no lost block or block number if block of the lost block"
-        try:
-            new_block = int(block_json.get("height"))
-            old_block = int(main_context.get("last_block"))
-            if(new_block - old_block > 1):
-                return old_block + 1
-            else:
-                return None
-        except Exception as e:
-            print("get_lost_block ERROR: ", e)
-        return None
-
-    def get_lost_blocks(old_height: int, new_height: int) -> list[int]:
-        "return list of lost blocks"
-        if old_height == 0:
-            return []
-        if (old_height > new_height):
-            return []
-        return [old_height + i+1 for i in range(new_height - old_height - 1)]
-
     def scan_and_send_alert(block: json):
-        messages ,errors = process_block(block)
+        messages, errors = process_block(block)
         for msg in messages:
-            bot.send_message(config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, msg)
+            bot.send_message(
+                config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, msg)
         for err in errors:
             bot.send_message(config.DEVELOPER_CHAT_ID, err)
 
@@ -91,7 +88,8 @@ def whale_notifier(main_context):
                 # * find if any blocks is lost and send alert
                 new_block = int(block_json.get("height"))
                 old_block = int(main_context.get("last_block"))
-                lost_blocks = get_lost_blocks(old_height=old_block, new_height=new_block)
+                lost_blocks = calc_lost_blocks(
+                    old_height=old_block, new_height=new_block)
                 for lost_block in lost_blocks:
                     logging.info(
                         f"scanning lost block {lost_block} in whale notifier")
@@ -110,7 +108,7 @@ def whale_notifier(main_context):
             # * wait before next block scan
             time.sleep(config.POLLING_INTERVAL)
     except Exception as e:
-        logging.error("whale_notifier_thread exited due to error: ", e)
+        logging.error(f"whale_notifier_thread exited due to error: {e}")
 
 
 if __name__ == "__main__":
@@ -119,4 +117,13 @@ if __name__ == "__main__":
     whale_notifier_thread = threading.Thread(
         target=lambda: whale_notifier(main_context), daemon=True)
     whale_notifier_thread.start()
-    bot.run()
+
+    whale_notifier_monitor_thread = threading.Thread(
+        target=lambda: whale_notifier_monitor(main_context), daemon=True)
+    whale_notifier_monitor_thread.start()
+
+    # * catch all the exceptions of bot.run() to prevent notifier thread from dying
+    try:
+        bot.run()
+    except Exception as e:
+        logging.error(f"bot exited due to error: {e}")
