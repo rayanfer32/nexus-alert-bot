@@ -24,3 +24,9 @@ OR if you want to run it as a service:
 source venv/bin/activate
 pm2 start "python3 main.py" --name whalebot
 ```
+
+### Windows
+```cmd
+venv\Scripts\activate
+python main.py
+```
