@@ -1,11 +1,10 @@
-from typing import List
-
+import config
 
 def remove_none_lines(msg):
     # * remove lines with None values
     _msg = ""
     for line in msg.splitlines():
-        if not line.find("None") > -1:
+        if line.find("None") <= -1:
             _msg += line + "\n"
     return _msg
 
@@ -44,7 +43,7 @@ fish_map = {
 }
 
 
-def get_fishname_and_emoji(amount) -> List[str]:
+def get_fishname_and_emoji(amount) -> list():
     "get emoji based on amount"
     if amount >= 500000:
         return emojis.get("blue_whale") * 6, fish_map.get("blue_whale")
@@ -68,7 +67,7 @@ def get_fishname_and_emoji(amount) -> List[str]:
         return emojis.get("shrimp") * 2, fish_map.get("shrimp")
 
 
-def whale_notification(block_height, contract):
+def whale_notification(block_height, contract, tidx, cidx):
     amount = contract.get("amount")
     fish_emoji, fish_name = get_fishname_and_emoji(amount)
     reply_msg = f""" {fish_emoji}
@@ -80,7 +79,7 @@ def whale_notification(block_height, contract):
 🔗 Proof: `{contract.get("proof")}`
 ↘️ From: `{contract.get("from")}`
 ↗️ To: `{contract.get("to")}`
-💠 https://explorer.nexus.io/scan/{block_height}"""
+💠 {config.EXPLORER_DOMAIN}/scan/og?block={block_height}&tidx={tidx}&cidx={cidx}"""
     return remove_none_lines(reply_msg)
 
 
