@@ -60,7 +60,7 @@ def process_block(block: json, alert_amount: int = config.ALERT_AMOUNT) -> list[
                             messages.append(message)
                     else:
                         desc = f"`{json.dumps(contract, indent=2)}`\n in block: {block.get('height')}"
-                        errors.append(strings.error_notification(
+                        errors.append(strings.info_notification(
                             "Special Contract", desc))
     except Exception as e:
         errors.append(

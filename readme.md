@@ -30,3 +30,11 @@ pm2 start "python3 main.py" --name whalebot
 venv\Scripts\activate
 python main.py
 ```
+
+### Features
+- [x] Send errors to multiple Maintainer chat ids
+- [x] Report maintainers when base url goes down
+- [x] Configure NXS_BASE_URL from .env
+
+### Improvements Todo
+> Yet to be discovered. 

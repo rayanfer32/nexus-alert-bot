@@ -83,6 +83,8 @@ def whale_notification(block_height, contract, tidx, cidx):
     return remove_none_lines(reply_msg)
 
 
-def error_notification(title, desc):
+def info_notification(title, desc):
     return f"ℹ️ {title} ℹ️\n {desc}"
 
+def error_notification(title, desc):
+    return f"❗️ {title} ❗️\n {desc}"
