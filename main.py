@@ -22,6 +22,11 @@ bot = Client(
 )
 
 
+# * send notifications to maintainers
+def send_notifications(message):
+    for chat_id in config.DEVELOPER_CHAT_IDS:
+        bot.send_message(chat_id, message)
+
 @bot.on_message(filters.command("start"))
 def handle_command(client, message):
     logging.info(message)
@@ -53,6 +58,7 @@ def handle_command(client, message):
 
 
 def whale_notifier_monitor(main_context):
+    time.sleep(10) # * delay thread start to avoid Client not started error.
     try:
         while True:
             try:
@@ -60,27 +66,29 @@ def whale_notifier_monitor(main_context):
                 new_block: int = int(block_json.get("height"))
                 old_block: int = int(main_context.get("last_block"))
                 if((new_block - old_block) > 3):
-                    bot.send_message(config.DEVELOPER_CHAT_ID, strings.dead)
-                time.sleep(config.POLLING_INTERVAL)
+                    send_notifications(strings.dead)
             except Exception as e:
-                logging.error(f"whale notifier monitor, {e}")
-                time.sleep(5)
+                logging.error(f"Whale notifier monitor, {e}")
+                send_notifications(f"ERROR: Whale notifier monitor: \n {e}")
+            
+            time.sleep(config.POLLING_INTERVAL)
     except Exception as e:
         logging.error(f"whale notifier monitor loop exited, {e}")
-
+        send_notifications(f"ERROR: Whale notifier monitor loop exited: \n {e}")
 
 def whale_notifier(main_context):
+    time.sleep(10) # * delay thread start to avoid Client not started error.
     def scan_and_send_alert(block: json):
         messages, errors = process_block(block)
         for msg in messages:
-            bot.send_message(
-                config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, msg)
+            bot.send_message(config.DEVELOPER_CHAT_ID if config.DEBUG_MODE else config.ALERT_CHANNEL_ID, msg)
         for err in errors:
-            bot.send_message(config.DEVELOPER_CHAT_ID, err)
+            send_notifications(err)
 
     logging.info("Starting whale notifier thread.")
     try:
         while True:
+            block_json = None
             try:
                 # * fetch topmost block
                 block_json = get_latest_block()
@@ -102,18 +110,24 @@ def whale_notifier(main_context):
                     logging.info("no new block")
             except Exception as e:
                 print(e)
+                send_notifications(f"ERROR: \n {e}")
                 logging.error(e)
 
-            main_context.update({"last_block": block_json.get("height")})
+            if(block_json != None):
+                main_context.update({"last_block": block_json.get("height")})
+            
             # * wait before next block scan
             time.sleep(config.POLLING_INTERVAL)
+    
     except Exception as e:
+        send_notifications(f"ERROR: Whale_notifier_thread exited due to error \n {e}")
         logging.error(f"whale_notifier_thread exited due to error: {e}")
 
 
 if __name__ == "__main__":
-    logging.info("Starting bot...")
+    logging.info("STARTING ALERT BOT...")
     main_context = {"last_block": 0}
+
     whale_notifier_thread = threading.Thread(
         target=lambda: whale_notifier(main_context), daemon=True)
     whale_notifier_thread.start()
@@ -124,6 +138,7 @@ if __name__ == "__main__":
 
     # * catch all the exceptions of bot.run() to prevent notifier thread from dying
     try:
+        print("STARTED ALERT BOT")
         bot.run()
     except Exception as e:
         logging.error(f"bot exited due to error: {e}")
