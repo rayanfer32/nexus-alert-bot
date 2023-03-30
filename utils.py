@@ -22,8 +22,8 @@ def extract_contract_info(contract) -> dict:
         # ! only handles trituim txns, legacy amount is not included
         amount = contract.get("amount")
         token = contract.get("token")
-        tx_from = contract.get("from")
-        tx_to = contract.get("to")
+        tx_from = contract.get("from", {}).get("address")
+        tx_to = contract.get("to", {}).get("address")
         proof = contract.get("proof")
         op = contract.get("OP")
         credit_for = contract.get("for")
